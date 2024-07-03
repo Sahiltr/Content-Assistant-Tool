@@ -23,7 +23,7 @@ Key content guidelines for LinkedIn:
 2. Focus on mental health insights, supportive content, and company updates
 3. Encourage engagement through thoughtful questions and supportive calls-to-action
 4. Use appropriate hashtags (usually 3-5) related to mental health and wellbeing
-5. Keep post length between 1300-2000 characters for optimal engagement
+5. Keep post length within the user-specified character range
 6. Use line breaks for readability
 7. Ensure all content is sensitive to mental health issues and avoids potentially triggering language
 8. Promote the benefits of AI support in mental health while maintaining a human touch
@@ -32,9 +32,9 @@ Key content guidelines for LinkedIn:
 """
 
 # Function to generate content
-def generate_content(prompt):
-    response = model.generate_content(system_prompt + "\n\n" + prompt)
-    return response.text
+def generate_content(prompt, max_length):
+    response = model.generate_content(system_prompt + f"\n\nGenerate content within {max_length} characters:\n\n" + prompt)
+    return response.text[:max_length]
 
 # Streamlit app
 st.title("Spillmate LinkedIn Content Creation Tool")
@@ -47,26 +47,30 @@ feature = st.selectbox("Select a feature",
 # User input
 user_input = st.text_area("Enter your prompt:")
 
+# User-defined output length
+min_length = st.number_input("Minimum character count:", min_value=100, max_value=2000, value=1300)
+max_length = st.number_input("Maximum character count:", min_value=100, max_value=3000, value=2000)
+
 if st.button("Generate"):
     if feature == "Write Post":
-        response = generate_content(f"Write a LinkedIn post about: {user_input}")
+        response = generate_content(f"Write a LinkedIn post about: {user_input}", max_length)
     elif feature == "Write Article Summary":
-        response = generate_content(f"Write a summary for a LinkedIn article about: {user_input}")
+        response = generate_content(f"Write a summary for a LinkedIn article about: {user_input}", max_length)
     elif feature == "Write Comment Reply":
-        response = generate_content(f"Write a professional reply to this LinkedIn comment: {user_input}")
+        response = generate_content(f"Write a professional reply to this LinkedIn comment: {user_input}", max_length)
     elif feature == "Generate Hashtags":
-        response = generate_content(f"Generate 3-5 relevant LinkedIn hashtags for: {user_input}")
+        response = generate_content(f"Generate 3-5 relevant LinkedIn hashtags for: {user_input}", max_length)
     elif feature == "Optimize Content":
-        response = generate_content(f"Analyze and optimize this LinkedIn content: {user_input}")
+        response = generate_content(f"Analyze and optimize this LinkedIn content: {user_input}", max_length)
     elif feature == "Create Poll":
-        response = generate_content(f"Create a LinkedIn poll about: {user_input}")
+        response = generate_content(f"Create a LinkedIn poll about: {user_input}", max_length)
     
     st.write(response)
 
     # Character count for posts
-    if feature == "Write Post":
-        st.write(f"Character count: {len(response)}")
-        if len(response) < 1300:
-            st.warning("Post is shorter than the recommended minimum of 1300 characters.")
-        elif len(response) > 2000:
-            st.warning("Post is longer than the recommended maximum of 2000 characters.")
+    char_count = len(response)
+    st.write(f"Character count: {char_count}")
+    if char_count < min_length:
+        st.warning(f"Post is shorter than the specified minimum of {min_length} characters.")
+    elif char_count > max_length:
+        st.warning(f"Post is longer than the specified maximum of {max_length} characters.")
